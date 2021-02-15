@@ -1,0 +1,3 @@
+rundir_riviera/*
+!rundir_riviera/run_*
+!rundir_riviera/script_tcl
