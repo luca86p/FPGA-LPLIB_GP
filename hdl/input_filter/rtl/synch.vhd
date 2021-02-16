@@ -1,10 +1,10 @@
 -- =============================================================================
--- Whatis        : neg-edge FF clock enable gate
+-- Whatis        : N-stages FF synchronizer
 -- Project       : FPGA-LPLIB_GP
 -- -----------------------------------------------------------------------------
--- File          : clk_gate_ff.vhd
+-- File          : synch.vhd
 -- Language      : VHDL-93
--- Module        : clk_gate_ff
+-- Module        : synch
 -- Library       : lplib_gp
 -- -----------------------------------------------------------------------------
 -- Author(s)     : Luca Pilato <pilato[punto]lu[chiocciola]gmail[punto]com>
@@ -25,7 +25,7 @@
 -- MIT License
 -- -----------------------------------------------------------------------------
 -- date        who               changes
--- 2020-02-24  Luca Pilato       file creation
+-- 2019-09-09  Luca Pilato       file creation
 -- =============================================================================
 
 
@@ -37,35 +37,43 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 
-entity clk_gate_ff is
+entity synch is
     generic (
-        RST_POL     : std_logic := '0'
+        RST_POL         : std_logic := '0';
+        RST_VAL         : std_logic := '0';
+        N               : positive  := 2
     );
     port (
-        rst         : in  std_logic;
-        clk         : in  std_logic;
-        en          : in  std_logic;
-        clk_g       : out std_logic
+        clk             : in  std_logic;
+        rst             : in  std_logic;
+        en              : in  std_logic;
+        synch_in        : in  std_logic;
+        synch_out       : out std_logic;
+        synch_out_chain : out std_logic_vector(N-1 downto 0)
     );
-end clk_gate_ff;
+end synch;
 
-architecture rtl of clk_gate_ff is
+architecture rtl of synch is
 
-    signal clk_en   : std_logic;
+    signal synch_chain : std_logic_vector(N-1 downto 0);
 
 begin
 
-    -- neg-edge ff
-    proc_ff: process(clk, rst)
+    proc_synch: process(clk,rst)
     begin
         if rst=RST_POL then
-            clk_en      <= '0';
-        elsif falling_edge(clk) then
-            clk_en      <= en;
+            synch_chain <= (others=>RST_VAL);
+        elsif rising_edge(clk) then
+            if en='1' then
+                synch_chain(0) <= synch_in;
+                synch_chain(N-1 downto 1) <= synch_chain(N-2 downto 0);
+            else
+                synch_chain <= (others=>'0');
+            end if;
         end if;
-    end process proc_ff;
+    end process proc_synch;
 
-    -- and gating
-    clk_g   <= clk and clk_en;
+    synch_out       <= synch_chain(N-1);
+    synch_out_chain <= synch_chain;
 
 end rtl;

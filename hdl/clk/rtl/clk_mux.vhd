@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Whatis        : glitch-free clock mux for 2 asynch clock signal
--- Project       : FPGA-LPLIB_ALU
+-- Project       : FPGA-LPLIB_GP
 -- -----------------------------------------------------------------------------
 -- File          : clk_mux.vhd
 -- Language      : VHDL-93
