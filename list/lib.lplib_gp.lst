@@ -12,3 +12,4 @@
 # ------------------------------------------------------------------------------
 ../hdl/input_filter/rtl/synch.vhd
 ../hdl/input_filter/rtl/synch_v.vhd
+../hdl/input_filter/rtl/debounce_filter.vhd
