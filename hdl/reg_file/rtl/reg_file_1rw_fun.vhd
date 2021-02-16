@@ -2,9 +2,9 @@
 -- Whatis        : register file
 -- Project       : FPGA-LPLIB_GP
 -- -----------------------------------------------------------------------------
--- File          : reg_file_1rw_mask.vhd
+-- File          : reg_file_1rw_fun.vhd
 -- Language      : VHDL-93
--- Module        : reg_file_1rw_mask
+-- Module        : reg_file_1rw_fun
 -- Library       : lplib_gp
 -- -----------------------------------------------------------------------------
 -- Author(s)     : Luca Pilato <pilato[punto]lu[chiocciola]gmail[punto]com>
@@ -14,7 +14,7 @@
 -- -----------------------------------------------------------------------------
 -- Description
 -- 
---  1x read/write port (with write logical mask)
+--  1x read/write port (with write feedback function)
 -- 
 -- -----------------------------------------------------------------------------
 -- Dependencies
@@ -39,7 +39,7 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 
-entity reg_file_1rw_mask is
+entity reg_file_1rw_fun is
     generic (
         RST_POL         : std_logic := '0' ;
         DATA_WIDTH      : positive  := 8   ;
@@ -52,14 +52,17 @@ entity reg_file_1rw_mask is
         --
         rdwr_addr       : in  std_logic_vector(ADDR_WIDTH-1 downto 0);
         wr_en           : in  std_logic;
+        wr_en_and       : in  std_logic;
+        wr_en_or        : in  std_logic;
+        wr_en_xor       : in  std_logic;
+        wr_en_xnor      : in  std_logic;
         wr_data         : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-        wr_mask         : in  std_logic_vector(DATA_WIDTH-1 downto 0);
         rd_data         : out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
-end entity reg_file_1rw_mask;
+end entity reg_file_1rw_fun;
 
 
-architecture rtl of reg_file_1rw_mask is
+architecture rtl of reg_file_1rw_fun is
 
     constant REG_LINES : integer := 2**ADDR_WIDTH;
 
@@ -81,11 +84,15 @@ begin
             if clr='1' then
                 reg_matrix <= (others=>(others=>'0'));
             elsif wr_en='1' then
-                for i in 0 to DATA_WIDTH-1 loop
-                    if wr_mask(i)='1' then
-                        reg_matrix(addr_i)(i) <= wr_data(i);
-                    end if;
-                end loop;
+                reg_matrix(addr_i) <= wr_data;
+            elsif wr_en_and='1' then
+                reg_matrix(addr_i) <= wr_data and reg_matrix(addr_i);
+            elsif wr_en_or='1' then
+                reg_matrix(addr_i) <= wr_data or reg_matrix(addr_i);
+            elsif wr_en_xor='1' then
+                reg_matrix(addr_i) <= wr_data xor reg_matrix(addr_i);
+            elsif wr_en_xnor='1' then
+                reg_matrix(addr_i) <= wr_data xnor reg_matrix(addr_i);
             end if;
         end if;
     end process proc_reg_matrix;
