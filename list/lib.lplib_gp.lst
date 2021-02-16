@@ -14,3 +14,8 @@
 ../hdl/input_filter/rtl/synch_v.vhd
 ../hdl/input_filter/rtl/debounce_filter.vhd
 ../hdl/input_filter/rtl/pulse_filter.vhd
+
+
+# -- find ../hdl/reg_file -type f
+# ------------------------------------------------------------------------------
+../hdl/reg_file/rtl/reg_file_1w1r.vhd
