@@ -5,7 +5,7 @@
 -- File          : clk_gate_ff.vhd
 -- Language      : VHDL-93
 -- Module        : clk_gate_ff
--- Library       : lplib_alu
+-- Library       : lplib_gp
 -- -----------------------------------------------------------------------------
 -- Author(s)     : Luca Pilato <pilato[punto]lu[chiocciola]gmail[punto]com>
 --                 
