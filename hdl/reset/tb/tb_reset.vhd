@@ -2,7 +2,7 @@
 -- Whatis        : testbench
 -- Project       : 
 -- -----------------------------------------------------------------------------
--- File          : tb_input_filter.vhd
+-- File          : tb_reset.vhd
 -- Language      : VHDL-93
 -- Module        : tb
 -- Library       : lplib_gp_verif
@@ -13,7 +13,7 @@
 -- Addr          : 
 -- -----------------------------------------------------------------------------
 -- Description
--- 
+--
 -- -----------------------------------------------------------------------------
 -- Dependencies
 -- 
@@ -80,17 +80,10 @@ architecture beh of tb is
 
     -- Signals
     -- ----------------------------------------
-    signal en           : std_logic;
-    signal synch_in     : std_logic;
-    signal synch_out    : std_logic;
-    --
-    signal x1           : std_logic;
-    signal y1           : std_logic;
-    signal yp1          : std_logic;
-    --
-    signal x2           : std_logic;
-    signal y2           : std_logic;
-    signal yp2          : std_logic;
+    signal mrst_req     : std_logic_vector(3 downto 0);
+    signal srst_req     : std_logic_vector(3 downto 0);
+    signal clr_log      : std_logic;
+
 
 begin
 
@@ -115,69 +108,59 @@ begin
     -- end process proc_clk;
 
 
+
     -- Unit(s) Under Test
     -- ----------------------------------------
-    i_uut_synch: entity lplib_gp.synch(rtl)
+    i_reset_filter: entity lplib_gp.reset_filter(rtl)
         generic map (
-            RST_POL         => '0',
-            RST_VAL         => '0',
-            N               => 2
+            RST_POL         => RST_POL
         )
         port map (
-            clk             => clk          ,
-            rst             => rst          ,
-            en              => en           ,
-            synch_in        => synch_in     ,
-            synch_out       => synch_out    ,
-            synch_out_chain => open
+            rst             => rst      ,
+            clk             => clk      ,
+            krst            => open
         );
 
-    i_uut_pulse1: entity lplib_gp.pulse_filter(rtl)
+
+    i_reset_ctrl_m: entity lplib_gp.reset_ctrl_m(rtl)
         generic map (
-            RST_POL         => '0',
-            RST_VAL         => '0',
-            N               =>  4 , -- 2^4 +1 = 16clk +1 = 1.7us
-            MODE            =>  1
+            RST_POL         => RST_POL,
+            MRST_POL        => RST_POL,
+            MRST_TIME       => 100000,
+            SIM_REDUCTION   => true
         )
         port map (
-            clk             => clk          ,
-            rst             => rst          ,
-            x               => x1           ,
-            y               => y1           ,
-            yp              => yp1
+            rst             => rst      ,
+            clk             => clk      ,
+            krst            => open     ,
+            mrst            => open     ,
+            mrst_req        => mrst_req ,
+            mrst_log        => open     ,
+            clr_log         => clr_log
         );
-
-    x1 <= synch_out;
-
-    i_uut_pulse2: entity lplib_gp.pulse_filter(rtl)
+ 
+ 
+ 
+    i_reset_ctrl_ms: entity lplib_gp.reset_ctrl_ms(rtl)
         generic map (
-            RST_POL         => '0',
-            RST_VAL         => '0',
-            N               =>  4 ,
-            MODE            =>  2
+            RST_POL         => RST_POL,
+            MRST_POL        => RST_POL,
+            MRST_TIME       => 100000,
+            SRST_POL        => RST_POL,
+            SRST_TIME       => 100000,
+            SIM_REDUCTION   => true
         )
         port map (
-            clk             => clk          ,
-            rst             => rst          ,
-            x               => x2           ,
-            y               => y2           ,
-            yp              => yp2
-        );
-
-    x2 <= synch_out;
-
-
-    i_uut_debouce: entity lplib_gp.debounce_filter(rtl)
-        generic map (
-            RST_POL         => '0',
-            RST_VAL         => '0',
-            N               =>  4
-        )
-        port map (
-            clk             => clk          ,
-            rst             => rst          ,
-            x               => synch_out    ,
-            y               => open
+            rst             => rst      ,
+            clk             => clk      ,
+            krst            => open     ,
+            mrst            => open     ,
+            srst            => open     ,
+            mrst_req        => mrst_req ,
+            mrst_log        => open     ,
+            srst_req        => srst_req ,
+            srst_log        => open     ,
+            clr_log         => clr_log
         );
 
 
@@ -192,8 +175,9 @@ begin
         rst         <= RST_POL;
         --
         --
-        en          <= '0';
-        synch_in    <= '0';
+        mrst_req    <= (others=>'0');
+        srst_req    <= (others=>'0');
+        clr_log     <= '0';
         --
         --
         wait for 123 ns;
@@ -210,36 +194,48 @@ begin
         tcase           <= 1;
         wait until rising_edge(clk);
         --
-        en          <= '1';
-        wait until rising_edge(clk);
+        wait for 1 ms;
         --
-        wait until rising_edge(clk);
-        synch_in    <= '1';
-        wait for 2 us;
-        wait until rising_edge(clk);
-        synch_in    <= '0';
-        wait for 4 us;
-        --
-        wait until rising_edge(clk);
-        synch_in    <= '1';
-        wait for 1 us;
-        wait until rising_edge(clk);
-        synch_in    <= '0';
-        wait for 4 us;
-        --
-        -- ======== noisy
+        -- ========
         tcase           <= 2;
         wait until rising_edge(clk);
         --
+        srst_req   <= "0010";
         wait until rising_edge(clk);
-        for i in 0 to 20 loop
-            synch_in    <= '1';
-            wait for i*123 ns;
-            synch_in    <= '0';
-            wait for 555 ns;
-        end loop;
-        wait for 4 us;
+        srst_req   <= "0000";
         --
+        wait for 1 ms;
+        --
+        -- ========
+        tcase           <= 3;
+        wait until rising_edge(clk);
+        --
+        mrst_req   <= "0001";
+        wait until rising_edge(clk);
+        mrst_req   <= "0000";
+        --
+        wait for 1 ms;
+        --
+        -- ========
+        tcase           <= 4;
+        wait until rising_edge(clk);
+        --
+        clr_log    <= '1';
+        wait until rising_edge(clk);
+        clr_log    <= '0';
+        wait until rising_edge(clk);
+        --
+        wait until rising_edge(clk);
+        wait until rising_edge(clk);
+        --
+        mrst_req   <= "0001";
+        srst_req   <= "0010";
+        wait until rising_edge(clk);
+        mrst_req   <= "0000";
+        srst_req   <= "0000";
+        --
+        wait for 1 ms;
+        --       
         --
         -- ======== Power Off
         tcase   <= -1;
