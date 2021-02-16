@@ -25,3 +25,4 @@
 ../hdl/reg_file/rtl/reg_file_1w1r_mask.vhd
 ../hdl/reg_file/rtl/reg_file_1w1r_fun.vhd
 ../hdl/reg_file/rtl/reg_file_1w2r.vhd
+../hdl/reg_file/rtl/reg_file_2w2r.vhd
