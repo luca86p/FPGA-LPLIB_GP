@@ -33,3 +33,4 @@
 # -- find ../hdl/reset -type f
 # ------------------------------------------------------------------------------
 ../hdl/reset/rtl/reset_filter.vhd
+../hdl/reset/rtl/reset_ctrl_m.vhd
