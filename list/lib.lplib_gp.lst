@@ -35,3 +35,8 @@
 ../hdl/reset/rtl/reset_filter.vhd
 ../hdl/reset/rtl/reset_ctrl_m.vhd
 ../hdl/reset/rtl/reset_ctrl_ms.vhd
+
+
+# -- find ../hdl/tick_and_timing -type f
+# ------------------------------------------------------------------------------
+../hdl/tick_and_timing/rtl/basetime_ms.vhd

@@ -11,6 +11,3 @@ The different units can be view as micro IP-cores for any design.
 ## Libraries
 - `lib.lplib_gp.lst`
 - `lib.lplib_gp_verif.lst`
-
-## Submodules
-- https://github.com/luca86p/FPGA-LPLIB_UTIL.git
