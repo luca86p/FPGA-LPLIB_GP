@@ -13,3 +13,4 @@
 ../hdl/input_filter/rtl/synch.vhd
 ../hdl/input_filter/rtl/synch_v.vhd
 ../hdl/input_filter/rtl/debounce_filter.vhd
+../hdl/input_filter/rtl/pulse_filter.vhd
