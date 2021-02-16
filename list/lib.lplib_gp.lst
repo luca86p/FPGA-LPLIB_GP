@@ -1,0 +1,14 @@
+# -- lib.lplib_gp.lst
+# -- find ../hdl -type f
+
+
+# -- find ../hdl/clk -type f
+# ------------------------------------------------------------------------------
+../hdl/clk/rtl/clk_gate_ff.vhd
+../hdl/clk/rtl/clk_mux.vhd
+
+
+# -- find ../hdl/input_filter -type f
+# ------------------------------------------------------------------------------
+../hdl/input_filter/rtl/synch.vhd
+../hdl/input_filter/rtl/synch_v.vhd

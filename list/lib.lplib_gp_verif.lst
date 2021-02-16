@@ -1,0 +1,6 @@
+# -- lib.lplib_gp_verif.lst
+# -- find ../hdl -type f | grep tb_
+
+
+# -- find ../hdl/clk -type f | grep tb_
+# ------------------------------------------------------------------------------
