@@ -1,10 +1,10 @@
 -- =============================================================================
--- Whatis        : reset controller: krst -> mrst
+-- Whatis        : reset controller: krst -> mrst -> srst
 -- Project       : FPGA-LPLIB_GP
 -- -----------------------------------------------------------------------------
--- File          : reset_ctrl_m.vhd
+-- File          : reset_ctrl_ms.vhd
 -- Language      : VHDL-93
--- Module        : reset_ctrl_m
+-- Module        : reset_ctrl_ms
 -- Library       : lplib_gp
 -- -----------------------------------------------------------------------------
 -- Author(s)     : Luca Pilato <pilato[punto]lu[chiocciola]gmail[punto]com>
@@ -19,10 +19,14 @@
 --  * krst (king reset)     : 3 clk deassert latency            from rst
 --  * mrst (master reset)   : MRST_TIME clk deassert latency    from krst 
 --      * SIM_REDUCTION used for simulation -> act as MRST_TIME = 256
+--  * srst (slave reset)    : SRST_TIME clk deassert latency    from mrst 
+--      * SIM_REDUCTION used for simulation -> act as SRST_TIME = 256
 -- 
 --  Features:
 --  * mrst has 4x requests inputs.
 --  * mrst_log register holds the last reset reqest. (krst domain)
+--  * srst has 4x requests inputs.
+--  * srst_log register holds the last reset reqest. (mrst domain)
 --
 -- -----------------------------------------------------------------------------
 -- Dependencies
@@ -47,11 +51,13 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 
-entity reset_ctrl_m is
+entity reset_ctrl_ms is
     generic (
         RST_POL         : std_logic := '0';
         MRST_POL        : std_logic := '0';
         MRST_TIME       : positive  := 100000; -- 100_000 clk cycles (after krst)
+        SRST_POL        : std_logic := '0';
+        SRST_TIME       : positive  := 100000; -- 100_000 clk cycles (after mrst)
         SIM_REDUCTION   : boolean   := false   -- time-stretch reduction for simulation
     );
     port (
@@ -60,15 +66,18 @@ entity reset_ctrl_m is
         krst            : out std_logic; -- king: glitch free
         --
         mrst            : out std_logic; -- master: usually the sys reset
+        srst            : out std_logic; -- slave: usually one or more big peripheral
         --
-        mrst_req        : in  std_logic_vector(3 downto 0); -- 4 lines of req        
+        mrst_req        : in  std_logic_vector(3 downto 0); -- 4 lines of req
         mrst_log        : out std_logic_vector(3 downto 0); -- log rst cause
+        srst_req        : in  std_logic_vector(3 downto 0); -- 4 lines of req
+        srst_log        : out std_logic_vector(3 downto 0); -- log rst cause
         clr_log         : in  std_logic
     );
-end entity reset_ctrl_m;
+end entity reset_ctrl_ms;
 
 
-architecture rtl of reset_ctrl_m is
+architecture rtl of reset_ctrl_ms is
 
     -- king reset (glitch free)
     signal rst_d1   : std_logic;
@@ -87,6 +96,16 @@ architecture rtl of reset_ctrl_m is
         end if;
     end function fun_mrst_time;
 
+    function fun_srst_time (SIM_REDUCTION : in boolean)
+        return positive is
+    begin
+        if SIM_REDUCTION then
+            return 256;
+        else
+            return SRST_TIME;
+        end if;
+    end function fun_srst_time;
+
     -- time-stretch MRST
     constant MRST_TMR_i : positive := fun_mrst_time(SIM_REDUCTION);
     constant MRST_TMR_b : positive := integer(CEIL(LOG2(real(MRST_TMR_i))));
@@ -94,8 +113,16 @@ architecture rtl of reset_ctrl_m is
     signal mrst_timer   : unsigned(MRST_TMR_b-1 downto 0);
     signal mrst_s       : std_logic;
 
+    -- time-stretch SRST
+    constant SRST_TMR_i : positive := fun_srst_time(SIM_REDUCTION);
+    constant SRST_TMR_b : positive := integer(CEIL(LOG2(real(SRST_TMR_i))));
+    constant SRST_TMR_u : unsigned(SRST_TMR_b-1 downto 0) := TO_UNSIGNED(SRST_TMR_i-1, SRST_TMR_b);
+    signal srst_timer   : unsigned(SRST_TMR_b-1 downto 0);
+    signal srst_s       : std_logic;
+
     -- reset log register
     signal mrst_log_s   : std_logic_vector(3 downto 0);
+    signal srst_log_s   : std_logic_vector(3 downto 0);
 
 begin
 
@@ -137,6 +164,22 @@ begin
     mrst_log <= mrst_log_s;
 
 
+    proc_srst_log: process(clk, mrst_s)
+    begin
+        if mrst_s=MRST_POL then
+            srst_log_s  <= (others=>'0');
+        elsif rising_edge(clk) then
+            if clr_log='1' then
+                srst_log_s  <= (others=>'0');
+            else
+                -- self-latch
+                srst_log_s  <= srst_log_s or srst_req;
+            end if;
+        end if;
+    end process proc_srst_log;
+
+    srst_log <= srst_log_s;
+
 
     -- master reset (with req and stretch)
     -- ----------------------------------------------------------------
@@ -163,6 +206,34 @@ begin
     end process proc_mrst;
 
     mrst    <= mrst_s;
+
+
+
+    -- slave reset (with req and stretch)
+    -- ----------------------------------------------------------------
+    proc_srst: process(clk, mrst_s)
+    begin
+        if mrst_s=MRST_POL then
+            srst_timer  <= SRST_TMR_u;
+            srst_s      <= SRST_POL;
+        elsif rising_edge(clk) then
+            if srst_s/=SRST_POL then
+                if (srst_req/="0000") then
+                    srst_timer  <= SRST_TMR_u;
+                    srst_s      <= SRST_POL;
+                end if;
+            else
+                if srst_timer=0 then
+                    srst_s      <= not SRST_POL;
+                else
+                    srst_timer  <= srst_timer-1;
+                    srst_s      <= SRST_POL; -- redundant, hold srst active
+                end if;
+            end if;
+        end if;
+    end process proc_srst;
+
+    srst    <= srst_s;
 
 
 end rtl;
