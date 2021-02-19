@@ -42,3 +42,4 @@
 ../hdl/tick_and_timing/rtl/basetime_ms.vhd
 ../hdl/tick_and_timing/rtl/basetime_us.vhd
 ../hdl/tick_and_timing/rtl/timeout_timer.vhd
+../hdl/tick_and_timing/rtl/ticker.vhd
