@@ -40,3 +40,5 @@
 # -- find ../hdl/tick_and_timing -type f
 # ------------------------------------------------------------------------------
 ../hdl/tick_and_timing/rtl/basetime_ms.vhd
+../hdl/tick_and_timing/rtl/basetime_us.vhd
+../hdl/tick_and_timing/rtl/timeout_timer.vhd
