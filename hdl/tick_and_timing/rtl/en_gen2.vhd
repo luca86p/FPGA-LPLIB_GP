@@ -2,9 +2,9 @@
 -- Whatis        : programmable enable pulse generator
 -- Project       : FPGA-LPLIB_GP
 -- -----------------------------------------------------------------------------
--- File          : en_gen.vhd
+-- File          : en_gen2.vhd
 -- Language      : VHDL-93
--- Module        : en_gen
+-- Module        : en_gen2
 -- Library       : lplib_gp
 -- -----------------------------------------------------------------------------
 -- Author(s)     : Luca Pilato <pilato[punto]lu[chiocciola]gmail[punto]com>
@@ -14,8 +14,10 @@
 -- -----------------------------------------------------------------------------
 -- Description
 --
---  Pulse generator, function of en_div prescaler.
---      * en_out period is (en_div+2) en_in cycles.
+--  Pulse generator, function of en_div1, en_div2 prescaler(S).
+--      * en_out1 period is (en_div1+2) en_in cycles.
+--      * en_out2 period is (en_div2+1) en_out1 cycles 
+--                          = (en_div1+2)*(en_div2+1) en_in cycles.
 --
 -- -----------------------------------------------------------------------------
 -- Dependencies
@@ -40,10 +42,10 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 
-entity en_gen is
+entity en_gen2 is
     generic (
         RST_POL         : std_logic := '0';
-        NBIT            : positive  := 8
+        NBIT            : positive  := 8        
     );
     port (
         clk             : in  std_logic;
@@ -51,16 +53,20 @@ entity en_gen is
         clear           : in  std_logic;
         --
         en_in           : in  std_logic;
-        en_div          : in  std_logic_vector(NBIT-1 downto 0);
-        en_out          : out std_logic
+        en_div1         : in  std_logic_vector(NBIT-1 downto 0);
+        en_div2         : in  std_logic_vector(NBIT-1 downto 0);
+        en_out1         : out std_logic;
+        en_out2         : out std_logic
     );
-end en_gen;
+end en_gen2;
 
-architecture rtl of en_gen is
+architecture rtl of en_gen2 is
 
     -- div chain
-    signal cnt              : unsigned(NBIT-1 downto 0);
-    signal toc              : std_logic;
+    signal cnt1             : unsigned(NBIT-1 downto 0);
+    signal cnt2             : unsigned(NBIT-1 downto 0);
+    signal toc1             : std_logic;
+    signal toc2             : std_logic;
 
 
 begin
@@ -70,35 +76,45 @@ begin
     proc_div: process(clk, rst)
     begin
         if rst=RST_POL then
-            cnt     <= (others=>'0');
-            toc     <= '0';
+            cnt1    <= (others=>'0');
+            cnt2    <= (others=>'0');
+            toc1    <= '0';
+            toc2    <= '0';
         elsif rising_edge(clk) then
-            --
-            toc     <= '0';
+            -- default
+            toc1    <= '0';
+            toc2    <= '0';
             --
             if clear='1' then
                 --
-                cnt     <= (others=>'0');
+                cnt1    <= (others=>'0');
+                cnt2    <= (others=>'0');
                 --
             elsif en_in='1' then
                 --
-                cnt     <= cnt + 1;
+                cnt1    <= cnt1 + 1;
                 --
-                if cnt=unsigned(en_div) then
-                    toc     <= '1';
+                if cnt1=unsigned(en_div1) then                    
+                    toc1    <= '1';
+                    if cnt2=unsigned(en_div2) then
+                        toc2    <= '1';
+                    end if;
                 end if;
                 --
-                if toc='1' then
-                    cnt     <= (others=>'0');
+                if toc1='1' then
+                    cnt1    <= (others=>'0');
+                    cnt2    <= cnt2 + 1;
+                    if toc2='1' then
+                        cnt2    <= (others=>'0');
+                    end if;
                 end if;
                 --
             end if;
         end if;
     end process proc_div;
 
-    en_out  <= toc;
-
-
+    en_out1 <= toc1;
+    en_out2 <= toc2;
 
 
 end rtl;

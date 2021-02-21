@@ -14,6 +14,9 @@
 -- -----------------------------------------------------------------------------
 -- Description
 --
+--  Pulse generator, function of tick_toc prescaler.
+--      * tick_out period is (tick_toc+1) tick_in cycles.
+--
 -- -----------------------------------------------------------------------------
 -- Dependencies
 -- 
