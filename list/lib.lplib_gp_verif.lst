@@ -25,4 +25,4 @@
 #../hdl/tick_and_timing/tb/tb_basetime.vhd
 #../hdl/tick_and_timing/tb/tb_en_gen.vhd
 #../hdl/tick_and_timing/tb/tb_ticker.vhd
-../hdl/tick_and_timing/tb/tb_global_time_counter.vhd
+#../hdl/tick_and_timing/tb/tb_global_time_counter.vhd
