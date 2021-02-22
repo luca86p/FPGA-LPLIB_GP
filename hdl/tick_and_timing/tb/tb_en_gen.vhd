@@ -84,6 +84,11 @@ architecture beh of tb is
     signal div          : std_logic_vector(NBIT-1 downto 0);
     signal pulse_out    : std_logic;
 
+    signal div1         : std_logic_vector(NBIT-1 downto 0);
+    signal div2         : std_logic_vector(NBIT-1 downto 0);
+    signal pulse_out1   : std_logic;
+    signal pulse_out2   : std_logic;
+
 
 begin
 
@@ -124,6 +129,21 @@ begin
             pulse_out       => pulse_out
         );
 
+    i_en_gen2: entity lplib_gp.en_gen2(rtl)
+        generic map (
+            RST_POL         => '0'          ,
+            NBIT            => NBIT
+        )
+        port map (
+            clk             => clk          ,
+            rst             => rst          ,
+            en              => en           ,
+            div1            => div1         ,
+            div2            => div2         ,
+            pulse_out1      => pulse_out1   ,
+            pulse_out2      => pulse_out2
+        );
+
 
 
     -- Drive Process
@@ -139,6 +159,9 @@ begin
         --
         en          <= '0';
         div         <= std_logic_vector(TO_UNSIGNED(0,NBIT));
+        --
+        div1        <= std_logic_vector(TO_UNSIGNED(0,NBIT));
+        div2        <= std_logic_vector(TO_UNSIGNED(0,NBIT));
         --
         --
         wait for 123 ns;
@@ -181,6 +204,7 @@ begin
         wait until rising_edge(clk);
         --
         div         <= std_logic_vector(TO_UNSIGNED(1,NBIT));
+        div1        <= std_logic_vector(TO_UNSIGNED(1,NBIT));
         wait until rising_edge(clk);
         --
         en          <= '1';
@@ -206,6 +230,23 @@ begin
         end loop;
         --
         wait for 50 us;
+        --
+        -- ========
+        tcase           <= 5;
+        wait until rising_edge(clk);
+        --
+        div         <= std_logic_vector(TO_UNSIGNED(3,NBIT));
+        div1        <= std_logic_vector(TO_UNSIGNED(4,NBIT));
+        div2        <= std_logic_vector(TO_UNSIGNED(5,NBIT));
+        wait until rising_edge(clk);
+        --
+        en          <= '1';
+        wait for 50 us;
+        wait until rising_edge(clk);
+        --
+        en          <= '0';
+        wait for 5 us;
+        wait until rising_edge(clk);
         --
         -- ======== Power Off
         tcase   <= -1;

@@ -14,10 +14,10 @@
 -- -----------------------------------------------------------------------------
 -- Description
 --
---  Pulse generator, function of en_div1, en_div2 prescaler(S).
---      * en_out1 period is (en_div1+2) en_in cycles.
---      * en_out2 period is (en_div2+1) en_out1 cycles 
---                          = (en_div1+2)*(en_div2+1) en_in cycles.
+--  Pulse generator, with prescaler(s).
+--      * pulse_out1 period is (div1+2) clock cycles.
+--      * pulse_out2 period is (div2+1) pulse_out1 cycles 
+--                          = (div1+2)*(div2+1) clock cycles.
 --
 -- -----------------------------------------------------------------------------
 -- Dependencies
@@ -50,13 +50,11 @@ entity en_gen2 is
     port (
         clk             : in  std_logic;
         rst             : in  std_logic;
-        clear           : in  std_logic;
-        --
-        en_in           : in  std_logic;
-        en_div1         : in  std_logic_vector(NBIT-1 downto 0);
-        en_div2         : in  std_logic_vector(NBIT-1 downto 0);
-        en_out1         : out std_logic;
-        en_out2         : out std_logic
+        en              : in  std_logic;
+        div1            : in  std_logic_vector(NBIT-1 downto 0);
+        div2            : in  std_logic_vector(NBIT-1 downto 0);
+        pulse_out1      : out std_logic;
+        pulse_out2      : out std_logic
     );
 end en_gen2;
 
@@ -85,18 +83,18 @@ begin
             toc1    <= '0';
             toc2    <= '0';
             --
-            if clear='1' then
+            if en='0' then
                 --
                 cnt1    <= (others=>'0');
                 cnt2    <= (others=>'0');
                 --
-            elsif en_in='1' then
+            else
                 --
                 cnt1    <= cnt1 + 1;
                 --
-                if cnt1=unsigned(en_div1) then                    
+                if cnt1=unsigned(div1) then                    
                     toc1    <= '1';
-                    if cnt2=unsigned(en_div2) then
+                    if cnt2=unsigned(div2) then
                         toc2    <= '1';
                     end if;
                 end if;
@@ -113,8 +111,8 @@ begin
         end if;
     end process proc_div;
 
-    en_out1 <= toc1;
-    en_out2 <= toc2;
+    pulse_out1 <= toc1;
+    pulse_out2 <= toc2;
 
 
 end rtl;

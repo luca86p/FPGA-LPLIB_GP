@@ -14,7 +14,7 @@
 -- -----------------------------------------------------------------------------
 -- Description
 --
---  Pulse generator, function of en_div prescaler.
+--  Pulse generator, with prescaler.
 --      * pulse_out period is (div+2) clock cycles.
 --
 -- -----------------------------------------------------------------------------
