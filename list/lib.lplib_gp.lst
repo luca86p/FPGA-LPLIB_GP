@@ -45,3 +45,4 @@
 ../hdl/tick_and_timing/rtl/ticker.vhd
 ../hdl/tick_and_timing/rtl/en_gen.vhd
 ../hdl/tick_and_timing/rtl/en_gen2.vhd
+../hdl/tick_and_timing/rtl/global_time_counter.vhd

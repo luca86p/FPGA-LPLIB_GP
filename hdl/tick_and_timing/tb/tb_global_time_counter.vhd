@@ -2,7 +2,7 @@
 -- Whatis        : testbench
 -- Project       : 
 -- -----------------------------------------------------------------------------
--- File          : tb_ticker.vhd
+-- File          : tb_global_time_counter.vhd
 -- Language      : VHDL-93
 -- Module        : tb
 -- Library       : lplib_gp_verif
@@ -52,7 +52,6 @@ end entity tb;
 
 architecture beh of tb is
 
-
     -- TB common parameters and signals
     -- ----------------------------------------
     constant RST_POL    : std_logic := '0';
@@ -73,22 +72,21 @@ architecture beh of tb is
     signal tcase        : integer := 0;
 
 
-    -- Constant
-    -- ----------------------------------------
-    constant NBIT       : positive := 8;
-
-
     -- Signals
     -- ----------------------------------------
     signal en           : std_logic;
-    signal tick_in      : std_logic;
-    signal tick_out_0   : std_logic;
-    signal tick_out_1   : std_logic;
-    signal tick_toc     : std_logic_vector(NBIT-1 downto 0);
-    signal tick_cnt_0   : std_logic_vector(NBIT-1 downto 0);
-    signal tick_cnt_1   : std_logic_vector(NBIT-1 downto 0);
-
-  
+    signal dbg_fast_ms_x10 : std_logic;
+    signal dbg_fast_s_x50 : std_logic;
+    signal base_1ms     : std_logic;
+    signal tick_1s      : std_logic;
+    signal tick_1m      : std_logic;
+    signal tick_1h      : std_logic;
+    signal tick_1d      : std_logic;
+    signal gtime_ms     : std_logic_vector(9 downto 0);
+    signal gtime_s      : std_logic_vector(5 downto 0);
+    signal gtime_m      : std_logic_vector(5 downto 0);
+    signal gtime_h      : std_logic_vector(4 downto 0);
+    signal gtime_d      : std_logic_vector(9 downto 0);
 
 begin
 
@@ -116,39 +114,32 @@ begin
 
     -- Unit(s) Under Test
     -- ----------------------------------------
-    i_ticker_0: entity lplib_gp.ticker(rtl)
+    i_global_time_counter: entity lplib_gp.global_time_counter(rtl)
         generic map (
-            RST_POL         => '0'          ,
-            NBIT            => NBIT         ,
-            OUT_BUF         => 0
+            RST_POL         => RST_POL      ,
+            CLK_FREQ        => CLK_FREQ
         )
         port map (
-            clk             => clk          ,
             rst             => rst          ,
+            clk             => clk          ,
             en              => en           ,
-            tick_in         => tick_in      ,
-            tick_out        => tick_out_0   ,
-            tick_toc        => tick_toc     ,
-            tick_cnt        => tick_cnt_0    
+            dbg_fast_ms_x10    => dbg_fast_ms_x10 ,
+            dbg_fast_s_x50    => dbg_fast_s_x50 ,
+            --
+            base_1ms        => base_1ms     ,
+            --
+            tick_1s         => tick_1s      ,
+            tick_1m         => tick_1m      ,
+            tick_1h         => tick_1h      ,
+            tick_1d         => tick_1d      ,
+            --
+            gtime_ms        => gtime_ms     ,
+            gtime_s         => gtime_s      ,
+            gtime_m         => gtime_m      ,
+            gtime_h         => gtime_h      ,
+            gtime_d         => gtime_d
         );
 
-    i_ticker_1: entity lplib_gp.ticker(rtl)
-        generic map (
-            RST_POL         => '0'          ,
-            NBIT            => NBIT         ,
-            OUT_BUF         => 1
-        )
-        port map (
-            clk             => clk          ,
-            rst             => rst          ,
-            en              => en           ,
-            tick_in         => tick_in      ,
-            tick_out        => tick_out_1   ,
-            tick_toc        => tick_toc     ,
-            tick_cnt        => tick_cnt_1     
-        );
-
-  
 
     -- Drive Process
     -- ----------------------------------------   
@@ -161,9 +152,9 @@ begin
         rst         <= RST_POL;
         --
         --
-        en          <= '0';
-        tick_in     <= '0';
-        tick_toc    <= std_logic_vector(TO_UNSIGNED(0,NBIT));
+        en         <= '0';
+        dbg_fast_ms_x10    <= '0';
+        dbg_fast_s_x50    <= '0';
         --
         --
         wait for 123 ns;
@@ -180,67 +171,31 @@ begin
         tcase           <= 1;
         wait until rising_edge(clk);
         --
-        en          <= '1';
-        tick_in     <= '1';
-        wait for 50 us;
-        wait until rising_edge(clk);
+        en         <= '1';
         --
-        en          <= '0';
-        wait for 5 us;
+        wait for 2 sec;
+        wait for 250 ms;
         wait until rising_edge(clk);
         --
         -- ========
         tcase           <= 2;
         wait until rising_edge(clk);
         --
-        en          <= '1';
-        tick_in     <= '0';
+        dbg_fast_ms_x10    <= '1';
+        dbg_fast_s_x50    <= '0';
         --
-        for i in 0 to 2**NBIT loop
-            tick_in     <= '1';
-            wait until rising_edge(clk);
-            tick_in     <= '0';
-            wait until rising_edge(clk);
-            wait until rising_edge(clk);
-        end loop;
-        --
-        wait for 50 us;
+        wait for 6 sec;
+        wait until rising_edge(clk);
         --
         -- ========
         tcase           <= 3;
         wait until rising_edge(clk);
         --
-        tick_toc    <= std_logic_vector(TO_UNSIGNED(3,NBIT));
+        dbg_fast_ms_x10    <= '1';
+        dbg_fast_s_x50    <= '1';
+        --
+        wait for 6 sec;
         wait until rising_edge(clk);
-        --
-        en          <= '1';
-        tick_in     <= '1';
-        wait for 50 us;
-        wait until rising_edge(clk);
-        --
-        en          <= '0';
-        wait for 5 us;
-        wait until rising_edge(clk);
-        --
-        -- ========
-        tcase           <= 4;
-        wait until rising_edge(clk);
-        --
-        tick_toc    <= std_logic_vector(TO_UNSIGNED(3,NBIT));
-        wait until rising_edge(clk);
-        --
-        en          <= '1';
-        tick_in     <= '0';
-        --
-        for i in 0 to 2**NBIT loop
-            tick_in     <= '1';
-            wait until rising_edge(clk);
-            tick_in     <= '0';
-            wait until rising_edge(clk);
-            wait until rising_edge(clk);
-        end loop;
-        --
-        wait for 50 us;
         --
         -- ======== Power Off
         tcase   <= -1;
@@ -270,6 +225,5 @@ begin
         --
         wait;
     end process proc_drive;
-
 
 end beh;

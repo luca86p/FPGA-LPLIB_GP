@@ -43,7 +43,8 @@ use ieee.math_real.all;
 entity ticker is
     generic (
         RST_POL         : std_logic := '0';
-        NBIT            : positive  := 8
+        NBIT            : positive  := 8;
+        OUT_BUF         : integer range 0 to 1 := 0 -- if 1 add a delay
     );
     port (
         clk             : in  std_logic;
@@ -61,6 +62,9 @@ architecture rtl of ticker is
     signal cnt_un       : unsigned(NBIT-1 downto 0);
     signal last_cnt     : std_logic;
 
+    signal tick_out_s   : std_logic;
+    signal tick_out_buf : std_logic;
+
 begin
 
     -- tick counter
@@ -69,16 +73,11 @@ begin
     begin
         if rst=RST_POL then
             cnt_un      <= (others=>'0');
-            tick_out    <= '0';
         elsif rising_edge(clk) then
-            --
-            tick_out    <= '0';
-            --
             if en='1' then
                 if tick_in='1' then
                     if last_cnt='1' then
                         cnt_un      <= (others=>'0');
-                        tick_out    <= '1';
                     else
                         cnt_un      <= cnt_un + 1;
                     end if;
@@ -91,6 +90,25 @@ begin
 
     last_cnt    <= '1' when cnt_un=unsigned(tick_toc) else '0';
     --
+    tick_out_s  <= en and tick_in and last_cnt; 
+    --
     tick_cnt    <= std_logic_vector(cnt_un);
+
+    gen_out_buf_0: if OUT_BUF=0 generate
+        tick_out_buf    <= tick_out_s;
+    end generate gen_out_buf_0;
+
+    gen_out_buf_1: if OUT_BUF=1 generate
+        proc_out_buf: process(clk,rst)
+        begin
+            if rst=RST_POL then
+                tick_out_buf    <= '0';
+            elsif rising_edge(clk) then
+                tick_out_buf    <= tick_out_s;                
+            end if;
+        end process proc_out_buf;
+    end generate gen_out_buf_1;
+
+    tick_out    <= tick_out_buf;
 
 end rtl;
