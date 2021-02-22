@@ -15,7 +15,7 @@
 -- Description
 --
 --  Pulse generator, function of en_div prescaler.
---      * en_out period is (en_div+2) en_in cycles.
+--      * pulse_out period is (div+2) clock cycles.
 --
 -- -----------------------------------------------------------------------------
 -- Dependencies
@@ -48,11 +48,9 @@ entity en_gen is
     port (
         clk             : in  std_logic;
         rst             : in  std_logic;
-        clear           : in  std_logic;
-        --
-        en_in           : in  std_logic;
-        en_div          : in  std_logic_vector(NBIT-1 downto 0);
-        en_out          : out std_logic
+        en              : in  std_logic;
+        div             : in  std_logic_vector(NBIT-1 downto 0);
+        pulse_out       : out std_logic
     );
 end en_gen;
 
@@ -76,15 +74,15 @@ begin
             --
             toc     <= '0';
             --
-            if clear='1' then
+            if en='0' then
                 --
                 cnt     <= (others=>'0');
                 --
-            elsif en_in='1' then
+            else
                 --
                 cnt     <= cnt + 1;
                 --
-                if cnt=unsigned(en_div) then
+                if cnt=unsigned(div) then
                     toc     <= '1';
                 end if;
                 --
@@ -96,7 +94,7 @@ begin
         end if;
     end process proc_div;
 
-    en_out  <= toc;
+    pulse_out  <= toc;
 
 
 

@@ -22,4 +22,5 @@
 
 # -- find ../hdl/tick_and_timing -type f | grep tb_
 # ------------------------------------------------------------------------------
-../hdl/tick_and_timing/tb/tb_basetime.vhd
+#../hdl/tick_and_timing/tb/tb_basetime.vhd
+../hdl/tick_and_timing/tb/tb_en_gen.vhd
