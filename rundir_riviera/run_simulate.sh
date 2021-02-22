@@ -48,7 +48,11 @@ printline '#'
 # --------------------------------
 funtic
 #
-./run_riviera.sh simulate lplib_gp_verif nogui
+if [[ $1 == "gui" ]]; then
+    ./run_riviera.sh simulate lplib_gp_verif gui
+else
+    ./run_riviera.sh simulate lplib_gp_verif nogui
+fi
 #
 echo "Simulation time $(($(funtoc)/1000)) s"
 

@@ -17,4 +17,9 @@
 
 # -- find ../hdl/reset -type f | grep tb_
 # ------------------------------------------------------------------------------
-../hdl/reset/tb/tb_reset.vhd
+#../hdl/reset/tb/tb_reset.vhd
+
+
+# -- find ../hdl/tick_and_timing -type f | grep tb_
+# ------------------------------------------------------------------------------
+../hdl/tick_and_timing/tb/tb_basetime.vhd
