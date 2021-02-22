@@ -71,6 +71,9 @@ begin
             cnt_un      <= (others=>'0');
             tick_out    <= '0';
         elsif rising_edge(clk) then
+            --
+            tick_out    <= '0';
+            --
             if en='1' then
                 if tick_in='1' then
                     if last_cnt='1' then
@@ -82,7 +85,6 @@ begin
                 end if;
             else 
                 cnt_un      <= (others=>'0');
-                tick_out    <= '0';
             end if;
         end if;
     end process proc_tick;
